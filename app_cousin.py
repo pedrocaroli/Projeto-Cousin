@@ -1,5 +1,6 @@
 import dash
 from dash import html, dcc
+from dash_auth import BasicAuth
 from dash.dependencies import Input, Output
 
 import pandas as pd
@@ -14,6 +15,8 @@ from dash_bootstrap_templates import load_figure_template
 load_figure_template("minty")
 
 app = dash.Dash(external_stylesheets=[dbc.themes.MORPH])
+USER_PWD = { "usuario": "cousin"}
+BasicAuth(app,USER_PWD)
 server = app.server
 
 df_cheque = pd.read_excel('Assets/Projeto Cousin.xlsx',sheet_name = 1)
