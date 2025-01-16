@@ -40,13 +40,8 @@ df_union['Mes'] = df_union['data_entrada'].dt.month
 df_union = df_union[df_union['Ano'] >= 2023]
 df_union['AnoMes'] = df_union['Ano'].astype(str) + '-' + df_union['Mes'].astype(str).str.zfill(2)
 
-# df_grouped = df_union.groupby(['Ano', 'Mes','origem'], as_index=False)['valor'].sum()
-# df_grouped['AnoMes'] = df_grouped['Ano'].astype(str) + '-' + df_grouped['Mes'].astype(str).str.zfill(2)
-
-# fig = px.bar(df_grouped, x='AnoMes', y='valor', color='origem', barmode='group', 
-#              labels={'AnoMes': 'Ano-Mês', 'Valor': 'Saldo'}, title='Soma da Coluna "Valor" por Ano e Mês')
-
-# fig.show()
+# x = df_union.AnoMes.value_counts().index.sort_values()
+# x = x.insert(0, 'select_all')
 
 app.layout = html.Div(id='div1',
     children=[
@@ -60,8 +55,15 @@ app.layout = html.Div(id='div1',
                     id= "origem",inputStyle={"margin-right": "5px", "margin-left": "20px"}),
 
                     html.H5("Mês"),
-                    dcc.Dropdown(df_union.AnoMes.value_counts().index,df_union.AnoMes.value_counts().index,
-                    id= "anomes")#,inputStyle={"margin-right": "5px", "margin-left": "20px"})
+                    dcc.DatePickerRange(id='date-picker-range',
+                                        start_date=df_union['data_entrada'].min(),
+                                        end_date=df_union['data_entrada'].max(),
+                                        display_format='YYYY-MM-DD')
+                    # dcc.Dropdown(x,multi=True, placeholder="Select multiple options",
+                    # id= "anomes")#,inputStyle={"margin-right": "5px", "margin-left": "20px"})
+
+
+
                     ], style={"height": "100vh", "margin": "20px", "padding": "20px"})
             ],sm=3),
 
@@ -84,14 +86,15 @@ app.layout = html.Div(id='div1',
             Output("grafico_2","figure"),
             [
                 Input("origem", "value"),
-                Input("anomes", "value")
+                Input('date-picker-range', 'start_date'),
+                Input('date-picker-range', 'end_date')
             ])
 
-def render_graphs(origem,anomes):
+def render_graphs(origem,start_date,end_date):
     operacao = np.sum
     #anomes = "Impostos"
     df_filter = df_union[df_union["origem"].isin(origem)]
-    df_filter = df_filter[df_filter["AnoMes"].isin(anomes)]
+    df_filter = df_filter[(df_filter['data_entrada'] >= start_date) & (df_filter['data_entrada'] <= end_date)]
     
     df_graf1 = df_filter.groupby(['AnoMes','origem'], as_index=False)['valor'].sum()
     df_graf2 = df_cartao.groupby(['Condição','origem'],as_index=False)['valor'].sum()
